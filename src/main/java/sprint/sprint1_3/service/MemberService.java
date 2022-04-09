@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sprint.sprint1_3.domain.Member;
+import sprint.sprint1_3.exception.member.NoSuchLoginId;
 import sprint.sprint1_3.repository.MemberRepositoryImpl;
 import sprint.sprint1_3.repository.MemberRepository;
 
@@ -40,40 +41,26 @@ public class MemberService {
     }
 
     @Transactional
-    public Long delete(Long memberId) {
-        memberRepository.deleteOne(memberId);
-        return memberId;
+    public void delete(Long memberId) {
+        memberRepository.deleteById(memberId);
     }
 
     @Transactional
-    public Long update(Long id, String name, Integer age,
-        Gender gender) {
-        Member memberOrigin = memberRepository.findOne(id);
-        return memberOrigin.updateInfo(id, name, age, gender);
+    public void update(Member member) {
+        memberRepository.findById(member.getId()).get().updateInfo(member.getId()
+            , member.getName(), member.getLoginId(), member.getLoginPassword());
     }
 
-    public Member login(String name) {
-        return memberRepository.findByName(name).orElseThrow(NoNameFound::new);
-    }
-
-    @Transactional
-    public Long payment(Long id, Long payment) {
-        Member member = memberRepository.findOne(id);
-
-        member.addPayment(payment);
-        return member.getId();
-    }
-
-    public List<Member> findMatchMembers(Long id) throws Exception{
-        Member member = memberRepository.findOne(id);
-        if (member.getMemberShip().equals(MemberShip.BRONZE)) {
-            throw new TooLowMemberShip("멤버쉽 등급이 너무 낮아서 매칭기능을 사용할 수 없습니다.");
+    public Member login(String loginId, String loginPassword) {
+        List<Member> members = memberRepository.findByLoginId(loginId);
+        Member member;
+        if (members.size() == 1){
+            member = members.get(0);
+            member.validatePassword(loginPassword);
         }
-
-        List<Member> matchAll = memberRepository.findMatchAll(member);
-        for (Member m : matchAll) {
-            m.setName(m.getSecretName());
+        if (members.size() == 0) {
+            throw new NoSuchLoginId("아이디가 없습니다.");
         }
-        return matchAll;
+        return members.get(0);
     }
 }

@@ -9,10 +9,8 @@
     <tr>
         <th>#</th>
         <th>이름</th>
-        <th>나이</th>
-        <th>총 결제 금액</th>
-        <th>성별</th>
-        <th>멤버쉽</th>
+        <th>loginId</th>
+        <th>loginPassword</th>
 
     </tr>
     </thead>
@@ -21,12 +19,8 @@
 
         <td th:text="${member.id}"></td>
         <td th:text="${member.name}"></td>
-        <td th:text="${member.age}"></td>
-        <td th:text="${member.payMoney}"></td>
-        <td th:text="${member.gender}"></td>
-        <td th:text="${member.memberShip}"></td>
-
-
+        <td th:text="${member.loginId}"></td>
+        <td th:text="${member.loginPassword}"></td>
     </tr>
     </tbody>
 </table>
