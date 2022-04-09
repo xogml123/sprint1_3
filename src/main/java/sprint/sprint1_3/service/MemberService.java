@@ -2,41 +2,31 @@ package sprint.sprint1_3.service;
 
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sprint.sprint1_3.domain.Gender;
 import sprint.sprint1_3.domain.Member;
-import sprint.sprint1_3.domain.MemberShip;
-import sprint.sprint1_3.exception.member.NoNameFound;
-import sprint.sprint1_3.exception.member.TooLowMemberShip;
+import sprint.sprint1_3.repository.MemberRepositoryImpl;
 import sprint.sprint1_3.repository.MemberRepository;
-import sprint.sprint1_3.repository.MemberRepositoryInterface;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberService {
 
-    private final MemberRepositoryInterface memberRepository;
-
-    @Autowired
-    public MemberService(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
-    }
+    private final MemberRepository memberRepository;
 
     @Transactional
     public Long join(Member member) {
         validateDuplicateMember(member);
-        member.defaultMemberShip(MemberShip.BRONZE);
-        member.defaultPayMoney(Long.valueOf(0));
         memberRepository.save(member);
         return member.getId();
     }
 
     private void validateDuplicateMember(Member member) {
-        Optional<Member> findMembers =
-            memberRepository.findByName(member.getName());
-        if (findMembers.isPresent()) {
+        List<Member> members = memberRepository.findByLoginId(member.getLoginId());
+        if (!members.isEmpty()) {
             throw new IllegalStateException("이미 존재하는 회원입니다.");
         }
     }
@@ -46,7 +36,7 @@ public class MemberService {
     }
 
     public Member findOne(Long memberId) {
-        return memberRepository.findOne(memberId);
+        return memberRepository.findById(memberId).orElse(null);
     }
 
     @Transactional
