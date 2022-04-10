@@ -22,6 +22,10 @@
     <a href="/members">회원 전체 목록</a>
 
 
+<form th:action="|@{/members/edit}|" method="get">
+    <button type="submit">회원 수정</button>
+</form>
+
 
 <form th:action="|@{/members/logout}|" method="post">
     <button type="submit">로그아웃</button>

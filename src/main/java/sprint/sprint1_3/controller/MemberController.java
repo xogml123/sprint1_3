@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import sprint.sprint1_3.domain.Member;
 import sprint.sprint1_3.dto.member.MemberDto;
@@ -35,21 +36,19 @@ public class MemberController {
         return "members/memberCreateForm";
     }
 
-//    @GetMapping(value = "/members/updateform")
-//    public String updateForm(@RequestParam("id") Long memberId,  Model model) {
-//        Member member = memberService.findOne(memberId);
-//        model.addAttribute("id", memberId);
-//        model.addAttribute("member", Member.toDto(member));
-//        return "members/memberUpdateForm";
-//    }
+    @GetMapping(value = "/members/edit")
+    public String updateForm(@SessionAttribute(name=SessionConst.LOGIN_MEMBER)Member member, Model model) {
+        model.addAttribute("member", Member.toDto(member));
+        return "members/memberUpdateForm";
+    }
 
-    //    @GetMapping(value = "/members/{id}")
-//    public String memberInfo(@PathVariable("id") Long id, Model model) {
-//        Member member = memberService.findOne(id);
-//        model.addAttribute("member", Member.toDto(member));
-//        return "members/memberInfo";
-//    }
-//
+    @GetMapping(value = "/members/{id}")
+    public String memberInfo(@PathVariable("id") Long id, Model model) {
+        Member member = memberService.findOne(id);
+        model.addAttribute("member", Member.toDto(member));
+        return "members/memberInfo";
+    }
+
     @GetMapping(value = "/members/login")
     public String loginForm(Model model) {
         model.addAttribute("member", new MemberDto());
@@ -87,7 +86,7 @@ public class MemberController {
 //        return "redirect:/members/{id}";
 //    }
 
-    @PostMapping(value = "/members")
+    @PostMapping(value = "/members/new")
     public String join(@Validated @ModelAttribute("member") MemberDto memberDto,
         BindingResult bindingResult) {
 
@@ -104,29 +103,31 @@ public class MemberController {
         }
     }
 
-    //    @PostMapping(value = "/members/edit/{id}")
-//    public String editMember(@Validated @ModelAttribute("member") MemberUpdateForm memberUpdateForm, BindingResult bindingResult, RedirectAttributes redirectAttributes, @PathVariable("id") Long id, Model model) {
-//
-//        if (bindingResult.hasErrors()) {
-//            model.addAttribute("id", id);
-//            return "members/memberUpdateForm";
-//        }
-//        Long memberId = memberService.update(id, memberUpdateForm.getName(),memberUpdateForm.getAge(), memberUpdateForm.getGender());
-//        redirectAttributes.addAttribute("id", memberId);
-//        return "redirect:/members/{id}";
-//    }
-//
-//    @PostMapping(value = "/members/delete/{id}")
-//    public String deleteMember(RedirectAttributes redirectAttributes, @PathVariable("id") Long id) {
-//
-//        Long memberId = memberService.delete(id);
-//        redirectAttributes.addAttribute("id", memberId);
-//        return "redirect:/";
-//    }
-//
+    @PostMapping(value = "/members/edit/{id}")
+    public String editMember(@SessionAttribute(name = SessionConst.LOGIN_MEMBER) Member member,
+        @Validated @ModelAttribute("member") MemberDto memberDto, BindingResult bindingResult,
+        @PathVariable("id") Long id, Model model, HttpServletRequest httpServletRequest) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("id", id);
+            return "members/memberUpdateForm";
+        }
+        //세션과 바꾸려는 member 같은지 비교
+        if (!member.getId().equals(id)) {
+            return "redirect:/";
+        }
+        Member memberRequest = MemberDto.toEntity(memberDto);
+        memberService.update(memberRequest);
+        HttpSession session = httpServletRequest.getSession();
+        session.setAttribute(SessionConst.LOGIN_MEMBER, memberService.findOne(memberRequest.getId()));
+        return "redirect:/";
+    }
+
     @PostMapping(value = "/members/login")
     public String login(@Validated @ModelAttribute("member") MemberLoginForm memberLoginForm,
-        BindingResult bindingResult, HttpServletRequest httpServletRequest) {
+        BindingResult bindingResult, HttpServletRequest httpServletRequest,
+        @RequestParam(required = false, defaultValue = "/") String requestURI) {
+
         if (bindingResult.hasErrors()) {
             return "members/memberLoginForm";
         }
@@ -135,7 +136,7 @@ public class MemberController {
                 memberLoginForm.getLoginPassword());
             HttpSession session = httpServletRequest.getSession();
             session.setAttribute(SessionConst.LOGIN_MEMBER, member);
-            return "redirect:/";
+            return "redirect:" + requestURI;
         } catch (RuntimeException ex) {
             bindingResult.reject("loginFail", ex.getMessage());
             return "members/memberLoginForm";

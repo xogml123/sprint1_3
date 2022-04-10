@@ -5,7 +5,7 @@
 </head>
 <body>
 <h1>회원 수정</h1>
-<form th:action="|/members/edit/${id}|" th:object="${member}" method="post">
+<form th:action="|/members/edit/${member.id}|" th:object="${member}" method="post">
     <div>
         <label for="name" th:text="회원명">회원명</label>
         <input type="text" id="name" th:field="*{name}" placeholder="이름을 입력하세요">
@@ -13,25 +13,20 @@
     <div th:errors="*{name}">
 
     </div>
+
     <div>
+        <label for="loginId" th:text="|회원 아이디|">id</label>
+        <input type="text" id="loginId" th:field="*{loginId}" placeholder="나이를 입력하세요">
+    </div>
+    <div th:errors="*{loginId}">
 
     </div>
+
     <div>
-        <label for="age" >나이</label>
-        <input type="text" id="age" th:field="*{age}" placeholder="나이를 입력하세요">
+        <label for="loginPassword" th:text="|회원 비밀번호|">password</label>
+        <input type="text" id="loginPassword" th:field="*{loginPassword}" placeholder="나이를 입력하세요">
     </div>
-    <div th:errors="*{age}">
-
-    </div>
-
-
-    <h2>성별을 선택하세요</h2>
-
-    <div th:each="gend : ${genders}">
-        <input type="radio" th:field="*{gender}" th:value="${gend.name()}" placeholder="수량을 입력하세요">
-        <label th:for="${#ids.prev('gender')}" th:text="${gend.name()}"></label>
-    </div>
-    <div th:errors="*{gender}">
+    <div th:errors="*{loginPassword}">
 
     </div>
 

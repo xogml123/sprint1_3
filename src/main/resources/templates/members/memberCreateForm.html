@@ -5,7 +5,7 @@
 </head>
 <body>
 <h1>회원 등록</h1>
-<form action="/members" th:object="${member}" method="POST">
+<form action="/members/new" th:object="${member}" method="POST">
     <div>
         <label for="name" th:text="회원명">회원명</label>
         <input type="text" id="name" th:field="*{name}" placeholder="이름을 입력하세요">

@@ -49,12 +49,13 @@ public class MemberService {
     public void update(Member member) {
         memberRepository.findById(member.getId()).get().updateInfo(member.getId()
             , member.getName(), member.getLoginId(), member.getLoginPassword());
+
     }
 
     public Member login(String loginId, String loginPassword) {
         List<Member> members = memberRepository.findByLoginId(loginId);
         Member member;
-        if (members.size() == 1){
+        if (members.size() == 1) {
             member = members.get(0);
             member.validatePassword(loginPassword);
         }
