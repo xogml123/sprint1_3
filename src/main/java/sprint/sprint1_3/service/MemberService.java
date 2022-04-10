@@ -4,10 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sprint.sprint1_3.domain.Member;
 import sprint.sprint1_3.exception.member.NoSuchLoginId;
+import sprint.sprint1_3.repository.MemberRedisRepository;
 import sprint.sprint1_3.repository.MemberRepositoryImpl;
 import sprint.sprint1_3.repository.MemberRepository;
 
@@ -17,6 +21,8 @@ import sprint.sprint1_3.repository.MemberRepository;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final MemberRedisRepository memberRedisRepository;
+    private final RedisTemplate redisTemplate;
 
     @Transactional
     public Long join(Member member) {
@@ -37,6 +43,7 @@ public class MemberService {
     }
 
     public Member findOne(Long memberId) {
+        Optional<Member> memberInRedis = memberRedisRepository.findById(String.valueOf(memberId));
         return memberRepository.findById(memberId).orElse(null);
     }
 
@@ -47,12 +54,18 @@ public class MemberService {
 
     @Transactional
     public void update(Member member) {
-        memberRepository.findById(member.getId()).get().updateInfo(member.getId()
-            , member.getName(), member.getLoginId(), member.getLoginPassword());
+        Member memberInDB = memberRepository.findById(member.getId()).get();
+        memberRedisRepository.save(member);
 
+        SetOperations setOperations = redisTemplate.opsForSet();
+        setOperations.remove(memberInDB.getLoginId(), memberInDB.getLoginPassword());
+        setOperations.add(member.getLoginId(), member.getLoginPassword());
+        memberInDB.updateInfo(member.getId()
+            , member.getName(), member.getLoginId(), member.getLoginPassword());
     }
 
     public Member login(String loginId, String loginPassword) {
+        HashOperations<String, Object, Object> stringObjectObjectHashOperations = redisTemplate.opsForHash();
         List<Member> members = memberRepository.findByLoginId(loginId);
         Member member;
         if (members.size() == 1) {

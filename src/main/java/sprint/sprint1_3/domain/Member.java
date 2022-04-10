@@ -8,10 +8,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisHash;
 import sprint.sprint1_3.dto.member.MemberDto;
 import sprint.sprint1_3.exception.member.NotMatchedPassword;
 
 @Entity
+@RedisHash(value = "member")
 @Getter
 @ToString
 @Builder

@@ -152,6 +152,16 @@ public class MemberController {
         return "redirect:/";
     }
 
+    @PostMapping(value = "/members/delete/{id}")
+    public String delete(
+        @SessionAttribute(name = SessionConst.LOGIN_MEMBER, required = false) Member member,
+        @PathVariable Long id, HttpServletRequest httpServletRequest) {
+        if (member.getId().equals(id))
+            memberService.delete(id);
+        HttpSession session = httpServletRequest.getSession(false);
+        session.invalidate();
+        return "redirect:/";
+    }
 //
 //    @PostMapping(value = "/members/payment/{id}")
 //    public String payment(@PathVariable Long id, @Validated @ModelAttribute("member") MemberPaymentForm memberPaymentForm, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
