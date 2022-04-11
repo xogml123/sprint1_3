@@ -95,7 +95,7 @@ public class MemberController {
         }
         Member member = MemberDto.toEntity(memberDto);
         try {
-            Long memberId = memberService.join(member);
+            memberService.join(member);
             return "redirect:/";
         } catch (RuntimeException ex) {
             bindingResult.reject("duplicate", null, ex.getMessage());

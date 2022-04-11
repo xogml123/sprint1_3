@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sprint.sprint1_3.domain.Member;
 import sprint.sprint1_3.exception.member.NoSuchLoginId;
+import sprint.sprint1_3.exception.member.NotMatchedPassword;
 import sprint.sprint1_3.repository.MemberRedisRepository;
 import sprint.sprint1_3.repository.MemberRepositoryImpl;
 import sprint.sprint1_3.repository.MemberRepository;
@@ -22,13 +23,10 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final MemberRedisRepository memberRedisRepository;
-    private final RedisTemplate redisTemplate;
-
     @Transactional
-    public Long join(Member member) {
+    public void join(Member member) {
         validateDuplicateMember(member);
         memberRepository.save(member);
-        return member.getId();
     }
 
     private void validateDuplicateMember(Member member) {
@@ -43,7 +41,6 @@ public class MemberService {
     }
 
     public Member findOne(Long memberId) {
-        Optional<Member> memberInRedis = memberRedisRepository.findById(String.valueOf(memberId));
         return memberRepository.findById(memberId).orElse(null);
     }
 
@@ -54,17 +51,25 @@ public class MemberService {
 
     @Transactional
     public void update(Member member) {
-        Member memberInDB = memberRepository.findById(member.getId()).get();
-        memberRedisRepository.save(member);
-
-        SetOperations setOperations = redisTemplate.opsForSet();
-        setOperations.remove(memberInDB.getLoginId(), memberInDB.getLoginPassword());
-        setOperations.add(member.getLoginId(), member.getLoginPassword());
-        memberInDB.updateInfo(member.getId()
-            , member.getName(), member.getLoginId(), member.getLoginPassword());
+        Optional<Member> memberOptional = memberRepository.findById(member.getId());
+        if (memberOptional.isPresent()) {
+            Member m = memberOptional.get();
+            m.updateInfo(member.getId(), member.getName(), member.getLoginId(),
+                member.getLoginPassword());
+            memberRedisRepository.put(member);
+        }
     }
 
     public Member login(String loginId, String loginPassword) {
+        Optional<String> byLoginIdPassword = memberRedisRepository.findByLoginIdPassword(loginId);
+        if (byLoginIdPassword.isPresent()) {
+            String p = byLoginIdPassword.get();
+            if (loginPassword.equals(p)) {
+                return memberRepository.findByLoginId(loginId).get(0);
+            }else {
+                throw new NotMatchedPassword("비밀번호가 일치하지 않습니다.");
+            }
+        }
         HashOperations<String, Object, Object> stringObjectObjectHashOperations = redisTemplate.opsForHash();
         List<Member> members = memberRepository.findByLoginId(loginId);
         Member member;

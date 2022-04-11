@@ -1,6 +1,7 @@
 package sprint.sprint1_3;
 
 import io.lettuce.core.dynamic.annotation.Value;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
@@ -8,8 +9,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.convert.RedisCustomConversions;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import sprint.sprint1_3.repository.Converter.BytesToLongConverter;
+import sprint.sprint1_3.repository.Converter.LongToBytesConverter;
 
 @Configuration
 @RequiredArgsConstructor
@@ -34,5 +38,11 @@ public class RedisConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.afterPropertiesSet();
         return template;
+    }
+
+    @Bean
+    public RedisCustomConversions redisCustomConversions(LongToBytesConverter longToBytesConverter,
+        BytesToLongConverter bytesToLongConverter) {
+        return new RedisCustomConversions(Arrays.asList(longToBytesConverter, bytesToLongConverter));
     }
 }
