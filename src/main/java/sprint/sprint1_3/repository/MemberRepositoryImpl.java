@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Repository;
 import sprint.sprint1_3.domain.Member;
+import sprint.sprint1_3.domain.MemberRedis;
 
 @Repository
 @RequiredArgsConstructor
@@ -23,7 +24,9 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public void save(Member member) {
-        //memberRedisRepository.save(member);
+        memberRedisRepository.save(
+            new MemberRedis(String.valueOf(member.getId()), member.getName(), member.getLoginId(),
+                member.getLoginPassword()));
         HashOperations hashOperations = redisTemplate.opsForHash();
         hashOperations.put(String.valueOf("members:loginpassword"), String.valueOf(member.getLoginId()),
             String.valueOf(member.getLoginPassword()));
@@ -32,7 +35,7 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public Optional<Member> findById(Long id) {
-        Optional<Member> memberInRedis = memberRedisRepository.findById(String.valueOf(id));
+        Optional<MemberRedis> memberInRedis = memberRedisRepository.findById(String.valueOf(id));
         if (memberInRedis.isPresent()) {
             return memberInRedis;
         } else {

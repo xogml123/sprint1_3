@@ -13,12 +13,12 @@ import sprint.sprint1_3.dto.member.MemberDto;
 import sprint.sprint1_3.exception.member.NotMatchedPassword;
 
 @Entity
-@RedisHash(value = "member")
 @Getter
 @ToString
 @Builder
 @Slf4j
 public class Member {
+
     @Id @GeneratedValue
     @Column(name = "member_id")
     private Long id;
@@ -40,6 +40,15 @@ public class Member {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public Member clone() throws CloneNotSupportedException {
+        return Member.builder().id(getId())
+            .name(getName())
+            .loginId(getLoginId())
+            .loginPassword(getLoginPassword())
+            .build();
     }
 
     public void updateInfo(Long id, String name, String loginId,
