@@ -25,7 +25,6 @@ public class LoginFilter implements Filter {
         throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String requestURI = httpServletRequest.getRequestURI();
-        log.info("{}", requestURI);
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 
         try {
@@ -36,7 +35,7 @@ public class LoginFilter implements Filter {
                     return;
                 }
             }
-            chain.doFilter(request, response);
+            chain. doFilter(request, response);
         } catch (Exception e) {
             throw e;
         } finally {

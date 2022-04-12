@@ -132,10 +132,10 @@ public class MemberController {
             return "members/memberLoginForm";
         }
         try {
-            Member member = memberService.login(memberLoginForm.getLoginId(),
+            String loginId = memberService.login(memberLoginForm.getLoginId(),
                 memberLoginForm.getLoginPassword());
             HttpSession session = httpServletRequest.getSession();
-            session.setAttribute(SessionConst.LOGIN_MEMBER, member);
+            session.setAttribute(SessionConst.LOGIN_MEMBER, memberService.findByLoginId(loginId));
             return "redirect:" + requestURI;
         } catch (RuntimeException ex) {
             bindingResult.reject("loginFail", ex.getMessage());

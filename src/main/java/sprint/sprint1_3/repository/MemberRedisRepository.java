@@ -45,16 +45,10 @@ public class MemberRedisRepository {
             .build());
     }
 
-    public Optional<String> findByLoginIdPassword(String loginId) {
-        HashOperations hashOperations = redisTemplate.opsForHash();
-        return Optional.ofNullable((String)hashOperations.get("member:loginpassword", loginId));
-    }
 
-    void delete(String id) {
+    public void delete(String id) {
         HashOperations hashOperations = redisTemplate.opsForHash();
 
-        redisTemplate.delete("member:loginpassword");
-        hashOperations.delete("members:loginpassword", String.valueOf(memberExist.getLoginId()));
-
+        redisTemplate.delete("member:" + id);
     }
 }

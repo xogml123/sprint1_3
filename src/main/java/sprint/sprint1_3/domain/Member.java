@@ -13,14 +13,14 @@ import sprint.sprint1_3.dto.member.MemberDto;
 import sprint.sprint1_3.exception.member.NotMatchedPassword;
 
 @Entity
-@RedisHash("member")
+//@RedisHash("member")
 @Getter
 @ToString
 @Builder
 @Slf4j
 public class Member {
 
-    @org.springframework.data.annotation.Id
+    //@org.springframework.data.annotation.Id
     @Id @GeneratedValue
     @Column(name = "member_id")
     private Long id;

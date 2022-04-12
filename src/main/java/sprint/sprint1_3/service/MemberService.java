@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import sprint.sprint1_3.domain.Member;
 import sprint.sprint1_3.exception.member.NoSuchLoginId;
 import sprint.sprint1_3.exception.member.NotMatchedPassword;
+import sprint.sprint1_3.repository.LoginRedisRepository;
 import sprint.sprint1_3.repository.MemberRedisRepository;
 import sprint.sprint1_3.repository.MemberRepositoryImpl;
 import sprint.sprint1_3.repository.MemberRepository;
@@ -23,6 +24,8 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final MemberRedisRepository memberRedisRepository;
+    private final LoginRedisRepository loginRedisRepository;
+
     @Transactional
     public void join(Member member) {
         validateDuplicateMember(member);
@@ -40,13 +43,27 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
+    //영속화 되지 않은 객체 return
     public Member findOne(Long memberId) {
-        return memberRepository.findById(memberId).orElse(null);
+        Optional<Member> memberInRedis = memberRedisRepository.findById(String.valueOf(memberId));
+        if (memberInRedis.isPresent()) {
+            return memberInRedis.get();
+        } else {
+            Optional<Member> memberInDB = memberRepository.findById(memberId);
+            if (memberInDB.isPresent()) {
+                memberRedisRepository.put(memberInDB.get());
+                return memberRedisRepository.findById(String.valueOf(memberId)).orElse(null);
+            } else {
+                return null;
+            }
+        }
     }
 
     @Transactional
     public void delete(Long memberId) {
         memberRepository.deleteById(memberId);
+        memberRedisRepository.delete(String.valueOf(memberId));
+        loginRedisRepository.deleteByLoginId(String.valueOf(memberId));
     }
 
     @Transactional
@@ -57,29 +74,33 @@ public class MemberService {
             m.updateInfo(member.getId(), member.getName(), member.getLoginId(),
                 member.getLoginPassword());
             memberRedisRepository.put(member);
+            loginRedisRepository.put(member.getLoginId(), member.getLoginPassword());
         }
     }
 
-    public Member login(String loginId, String loginPassword) {
-        Optional<String> byLoginIdPassword = memberRedisRepository.findByLoginIdPassword(loginId);
-        if (byLoginIdPassword.isPresent()) {
-            String p = byLoginIdPassword.get();
+    public String login(String loginId, String loginPassword) {
+
+        Optional<String> passwordByLoginId = loginRedisRepository.findPasswordByLoginId(loginId);
+        if (passwordByLoginId.isPresent()) {
+            String p = passwordByLoginId.get();
             if (loginPassword.equals(p)) {
-                return memberRepository.findByLoginId(loginId).get(0);
+                return loginId;
             }else {
                 throw new NotMatchedPassword("비밀번호가 일치하지 않습니다.");
             }
         }
-        HashOperations<String, Object, Object> stringObjectObjectHashOperations = redisTemplate.opsForHash();
+        //Hit miss
         List<Member> members = memberRepository.findByLoginId(loginId);
-        Member member;
         if (members.size() == 1) {
-            member = members.get(0);
-            member.validatePassword(loginPassword);
+            members.get(0).validatePassword(loginPassword);
         }
-        if (members.size() == 0) {
+        else if (members.size() == 0) {
             throw new NoSuchLoginId("아이디가 없습니다.");
         }
-        return members.get(0);
+        return members.get(0).getLoginId();
+    }
+
+    public Member findByLoginId(String loginId) {
+        return memberRepository.findByLoginId(loginId).get(0);
     }
 }
