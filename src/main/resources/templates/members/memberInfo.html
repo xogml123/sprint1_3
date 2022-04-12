@@ -12,54 +12,20 @@
     </div>
 
     <div>
-        <label for="age" >나이</label>
-        <input type="text" id="age" th:field="*{age}" placeholder="나이를 입력하세요" disabled>
-    </div>
-
-    <h2>성별</h2>
-    <div th:each="gend : ${genders}">
-        <input type="radio" th:field="*{gender}" th:value="${gend.name()}" placeholder="수량을 입력하세요" disabled>
-        <label th:for="${#ids.prev('gender')}" th:text="${gend.name()}"></label>
+        <label for="loginId" >아이디</label>
+        <input type="text" id="loginId" th:field="*{loginId}" placeholder="나이를 입력하세요" disabled>
     </div>
 
     <div>
-        <label for="payMoney" >총결제 금액</label>
-        <input type="text" id="payMoney" th:field="*{payMoney}" placeholder="결제 금액를 입력하세요" disabled>
-    </div>
-    <div th:errors="*{payMoney}">
-
+        <label for="loginPassword" >비밀번호</label>
+        <input type="text" id="loginPassword" th:field="*{loginPassword}" placeholder="나이를 입력하세요" disabled>
     </div>
 
-    <h2>멤버쉽</h2>
-
-    <div th:each="memb : ${memberShips}">
-        <input type="radio" th:field="*{memberShip}" th:value="${memb.name()}" placeholder="수량을 입력하세요" disabled>
-        <label th:for="${#ids.prev('memberShip')}" th:text="${memb.name()}"></label>
-    </div>
-
-<button
-    onclick="location.href='members.html'"
-    th:onclick="|location.href='@{/members/updateform(id=${member.id})}'|"
-    type="button">회원 정보 수정</button>
-
-
-<form th:action="|@{/members/delete/{id}(id=${member.id})}|" method="POST">
-    <button type="submit">회원 삭제</button>
-</form>
-
-    <button
-        onclick="location.href='members.html'"
-        th:onclick="|location.href='@{/members/payment(id=${member.id})}'|"
-        type="button"> 결제</button>
-
-    <button
-        onclick="location.href='members.html'"
-        th:onclick="|location.href='@{/members/match(id=${member.id})}'|"
-        type="button">매칭 정보</button>
 <button
     onclick="location.href='members.html'"
     th:onclick="|location.href='@{/}'|"
     type="button">취소</button>
+</form>
 </body>
 
 </html>

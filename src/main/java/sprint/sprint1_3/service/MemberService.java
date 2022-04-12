@@ -3,6 +3,7 @@ package sprint.sprint1_3.service;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,6 +21,7 @@ import sprint.sprint1_3.repository.MemberRepository;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -47,8 +49,11 @@ public class MemberService {
     public Member findOne(Long memberId) {
         Optional<Member> memberInRedis = memberRedisRepository.findById(String.valueOf(memberId));
         if (memberInRedis.isPresent()) {
+            log.info("member findOne hit ----");
             return memberInRedis.get();
         } else {
+            log.info("member findOne hit miss ---");
+
             Optional<Member> memberInDB = memberRepository.findById(memberId);
             if (memberInDB.isPresent()) {
                 memberRedisRepository.put(memberInDB.get());
@@ -60,10 +65,10 @@ public class MemberService {
     }
 
     @Transactional
-    public void delete(Long memberId) {
-        memberRepository.deleteById(memberId);
-        memberRedisRepository.delete(String.valueOf(memberId));
-        loginRedisRepository.deleteByLoginId(String.valueOf(memberId));
+    public void delete(Long id) {
+        memberRepository.deleteById(id);
+        loginRedisRepository.deleteByLoginId(memberRedisRepository.findById(String.valueOf(id)).get().getLoginId());
+        memberRedisRepository.delete(String.valueOf(id));
     }
 
     @Transactional
@@ -82,6 +87,8 @@ public class MemberService {
 
         Optional<String> passwordByLoginId = loginRedisRepository.findPasswordByLoginId(loginId);
         if (passwordByLoginId.isPresent()) {
+            log.info("login hit---------------");
+
             String p = passwordByLoginId.get();
             if (loginPassword.equals(p)) {
                 return loginId;
@@ -90,8 +97,12 @@ public class MemberService {
             }
         }
         //Hit miss
+        log.info("login hit miss---------------");
         List<Member> members = memberRepository.findByLoginId(loginId);
         if (members.size() == 1) {
+            memberRedisRepository.put(members.get(0));
+            loginRedisRepository.put(members.get(0).getLoginId(),
+                members.get(0).getLoginPassword());
             members.get(0).validatePassword(loginPassword);
         }
         else if (members.size() == 0) {

@@ -40,9 +40,4 @@ public class RedisConfig {
         return template;
     }
 
-    @Bean
-    public RedisCustomConversions redisCustomConversions(LongToBytesConverter longToBytesConverter,
-        BytesToLongConverter bytesToLongConverter) {
-        return new RedisCustomConversions(Arrays.asList(longToBytesConverter, bytesToLongConverter));
-    }
 }

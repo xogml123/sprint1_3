@@ -26,6 +26,9 @@
     <button type="submit">회원 수정</button>
 </form>
 
+<form th:action="|@{/members/{id}(id=${member.id})}|" method="get">
+    <button type="submit">회원 정보</button>
+</form>
 
 <form th:action="|@{/members/delete/{id}(id=${member.id})}|" method="post">
     <button type="submit">회원삭제</button>
@@ -34,7 +37,6 @@
 <form th:action="|@{/members/logout}|" method="post">
     <button type="submit">로그아웃</button>
 </form>
-</p>
 
 </body>
 </html>

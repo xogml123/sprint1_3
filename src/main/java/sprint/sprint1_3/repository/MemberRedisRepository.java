@@ -1,6 +1,7 @@
 package sprint.sprint1_3.repository;
 
 import java.util.Optional;
+import javax.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -11,7 +12,7 @@ import sprint.sprint1_3.domain.Member;
 @RequiredArgsConstructor
 public class MemberRedisRepository {
 
-    public final RedisTemplate redisTemplate;
+    private final RedisTemplate redisTemplate;
 
 
     public void put(Member member) {
@@ -30,15 +31,16 @@ public class MemberRedisRepository {
     }
 
     public Optional<Member> findById(String id) {
-        HashOperations hashOperations = redisTemplate.opsForHash();
-        Long idRead = (Long)hashOperations.get("member:" + id, "id");
-        if (idRead == null) {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        String idString = hashOperations.get("member:" + id, "id");
+        if (idString == null) {
             return Optional.empty();
         }
-        String loginId = (String)hashOperations.get("member:" + id, "loginId");
-        String loginPassword = (String)hashOperations.get("member:" + id, "loginPassword");
-        String name = (String)hashOperations.get("member:" + id, "name");
-        return Optional.ofNullable(Member.builder().id(idRead)
+        Long idLong = Long.valueOf(idString);
+        String loginId = hashOperations.get("member:" + id, "loginId");
+        String loginPassword = hashOperations.get("member:" + id, "loginPassword");
+        String name = hashOperations.get("member:" + id, "name");
+        return Optional.ofNullable(Member.builder().id(idLong)
             .loginId(loginId)
             .loginPassword(loginPassword)
             .name(name)

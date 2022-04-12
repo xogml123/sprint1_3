@@ -16,20 +16,26 @@ public class LoginRedisRepository {
 
 
     public void put(String loginId, String loginPassword) {
-        HashOperations hashOperations = redisTemplate.opsForHash();
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
 
-        hashOperations.delete("member:loginpassword", loginId);
-        hashOperations.put("member:loginpassword", loginId, loginPassword);
+        hashOperations.delete(getKey(), loginId);
+        hashOperations.put(getKey(), loginId, loginPassword);
     }
 
     public Optional<String> findPasswordByLoginId(String loginId) {
-        HashOperations hashOperations = redisTemplate.opsForHash();
-        return Optional.ofNullable((String)hashOperations.get("member:loginpassword", loginId));
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        return Optional.ofNullable((String)hashOperations.get(getKey(), loginId));
     }
 
     public void deleteByLoginId(String loginID) {
-        HashOperations hashOperations = redisTemplate.opsForHash();
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
 
-        hashOperations.delete("members:loginpassword", loginID);
+        hashOperations.delete(getKey(), loginID);
     }
+
+    private String getKey() {
+        return "member:loginpassword";
+    }
+
+
 }
